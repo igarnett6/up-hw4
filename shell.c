@@ -18,14 +18,13 @@
 int main()
 {
     while(true) {
-        printf("Process ID: %d", getpid());
+        printf("[PID: %d]", getpid());
         printf("(╯°益°)╯彡┻━┻ ");
         char command[4096];
         fgets(command, 4096, stdin);
         int len = strlen(command);
         if (command[len-1] == '\n') command[len-1] = '\0';
         if(fork() == 0){
-          printf("Process ID: %d", getppid());
           char *token = strtok(command, " ");
           char *util = token;
           char *args[4096];
