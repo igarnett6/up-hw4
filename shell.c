@@ -13,35 +13,42 @@
 #include <unistd.h>  // execlp
 #include <stdbool.h> // true
 #include <sys/wait.h> //wait
-#include <stdlib.h> //?
+#include <stdlib.h> //?malloc
+#include <limits.h> //realpath
 
 int main()
 {
     while(true) {
-        printf("[PID: %d]", getpid());
-        printf("(╯°益°)╯彡┻━┻ ");
+        char pwd[4096];
+        realpath(".", pwd);
+        printf("╭─%s -> [PID: %d]\n", pwd, getpid());
+        printf("╰─(╯°益°)╯彡┻━┻ ");
         char command[4096];
         fgets(command, 4096, stdin);
         int len = strlen(command);
+        int changeDir = 0;
+        if((strncmp(command, "exit", 4)) == 0){
+          exit(0);
+        }
+        if((strncmp(command, "cd", 2)) == 0){
+          changeDir = 1;
+        }
         if (command[len-1] == '\n') command[len-1] = '\0';
-        if(fork() == 0){
+        if(changeDir == 1){
+          char *cdCmd = strtok(command, " ");
+          char *newDir = strtok(NULL, " ");
+          chdir(newDir);
+        }
+        else if(fork() == 0){
           char *token = strtok(command, " ");
           char *util = token;
           char *args[4096];
           args[0] = token;
           int i = 1;
           while((token = strtok(NULL, " ")) != NULL){
-
             args[i] = token;
-            // write(1, "New arg added: ", 16);
+            i++;
           }
-          // write(1, args[0], 4096);
-          // write(1, "\n", 1);
-          // write(1, args[1], 4096);
-          // write(1, "\n", 1);
-          // write(1, args[2], 4096);
-          // write(1, "\n", 1);
-          // execlp(util, args[1], NULL);
           execvp(args[0], args);
           perror("Failed to exec");
           _exit(0);
