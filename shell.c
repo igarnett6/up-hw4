@@ -18,6 +18,13 @@
 #include <fcntl.h> //O_RDONLY
 
 
+//prototypes
+void checkRedirStdin(char *command);
+void checkRedirStdout(char *command);
+void checkRedirStderr(char *command);
+void execCommand(char *command);
+
+
 int main()
 {
     while(true) {
@@ -42,54 +49,12 @@ int main()
           chdir(newDir);
           continue;
         }
+
         if(fork() == 0){
-          char *redirFile;
-          if((redirFile = strstr(command, " < ")) != NULL){
-            redirFile = redirFile+3;
-            redirFile = strtok(redirFile, " ");
-            close(0);
-            int fd = open(redirFile, O_RDONLY);
-            if(fd == -1){
-              perror("Failed to open \"redirFile\"");
-              exit(1);
-            }
-          }
-          if((redirFile = strstr(command, " > ")) != NULL){
-            redirFile = redirFile+3;
-            redirFile = strtok(redirFile, " ");
-            close(1);
-            int fd = open(redirFile, O_RDWR | O_CREAT);
-            if(fd == -1){
-              perror("Failed to open \"redirFile\"");
-              exit(1);
-            }
-          }
-          if((redirFile = strstr(command, " 2> ")) != NULL){
-            redirFile = redirFile+3;
-            redirFile = strtok(redirFile, " ");
-            close(2);
-            int fd = open(redirFile, O_RDWR | O_CREAT);
-            if(fd == -1){
-              perror("Failed to open \"redirFile\"");
-              exit(1);
-            }
-          }
-          char *token = calloc(1, 4096);
-          token = strtok(command, " ");
-          char *args[4096];
-          args[0] = token;
-          int i = 1;
-          while((token = strtok(NULL, " ")) != NULL){
-            if((token[0] != '<') && (token[0] != '>') && !(token[0] == '2' && token[1] == '>')){
-              args[i] = token;
-              int argLen = strlen(args[i]);
-              if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
-            }
-            i++;
-          }
-          execvp(args[0], args);
-          perror("Failed to exec");
-          free(token);
+          checkRedirStdin(command);
+          checkRedirStdout(command);
+          checkRedirStderr(command);
+          execCommand(command);
           _exit(0);
         }
         else{
@@ -99,4 +64,65 @@ int main()
         }
         free(command);
     }
+}
+
+void checkRedirStdin(char *command){
+  char *redirFile;
+  if((redirFile = strstr(command, " < ")) != NULL){
+    redirFile = redirFile+3;
+    redirFile = strtok(redirFile, " ");
+    close(0);
+    int fd = open(redirFile, O_RDONLY);
+    if(fd == -1){
+      perror("Failed to open \"redirFile\"");
+      exit(1);
+    }
+  }
+}
+
+void checkRedirStdout(char *command){
+  char *redirFile;
+  if((redirFile = strstr(command, " > ")) != NULL){
+    redirFile = redirFile+3;
+    redirFile = strtok(redirFile, " ");
+    close(1);
+    int fd = open(redirFile, O_RDWR | O_CREAT);
+    if(fd == -1){
+      perror("Failed to open \"redirFile\"");
+      exit(1);
+    }
+  }
+}
+
+void checkRedirStderr(char *command){
+  char *redirFile;
+  if((redirFile = strstr(command, " 2> ")) != NULL){
+    redirFile = redirFile+3;
+    redirFile = strtok(redirFile, " ");
+    close(2);
+    int fd = open(redirFile, O_RDWR | O_CREAT);
+    if(fd == -1){
+      perror("Failed to open \"redirFile\"");
+      exit(1);
+    }
+  }
+}
+
+void execCommand(char *command){
+  char *token = calloc(1, 4096);
+  token = strtok(command, " ");
+  char *args[4096];
+  args[0] = token;
+  int i = 1;
+  while((token = strtok(NULL, " ")) != NULL){
+    if((token[0] != '<') && (token[0] != '>') && !(token[0] == '2' && token[1] == '>')){
+      args[i] = token;
+      int argLen = strlen(args[i]);
+      if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
+    }
+    i++;
+  }
+  execvp(args[0], args);
+  perror("Failed to exec");
+  free(token);
 }
