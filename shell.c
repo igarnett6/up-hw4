@@ -21,7 +21,6 @@
 int main()
 {
     while(true) {
-        char *sourceFile;
         char pwd[4096];
         realpath(".", pwd);
         printf("╭─%s -> [PID: %d]\n", pwd, getpid());
@@ -30,21 +29,6 @@ int main()
         fgets(command, 4096, stdin);
         int len = strlen(command);
         if (command[len-1] == '\n') command[len-1] = '\0';
-        if((sourceFile = strstr(command, " < ")) != NULL){
-          sourceFile = sourceFile+3; //this only works @end, change to strtok
-          close(0);
-          int fd = open(sourceFile, O_RDONLY);
-          if(fd == -1){
-            perror("Failed to open \"sourceFile\"");
-            exit(1);
-          }
-          printf("\nfd:\t%d\n", fd);
-          if((command = fgets(command, 4096, stdin)) == NULL){
-            perror("fgets returned NULL from stdin");
-          }
-          if (command[len-1] == '\n') command[len-1] = '\0';
-          close(fd);
-        }
         // printf("command:\t%s\n", command);
         if((strncmp(command, "exit", 4)) == 0){
           exit(0);
@@ -60,15 +44,27 @@ int main()
           continue;
         }
         if(fork() == 0){
+          char *sourceFile;
+          if((sourceFile = strstr(command, " < ")) != NULL){
+            sourceFile = sourceFile+3; //this only works @end, change to strtok
+            close(0);
+            int fd = open(sourceFile, O_RDONLY);
+            if(fd == -1){
+              perror("Failed to open \"sourceFile\"");
+              exit(1);
+            }
+          }
           char *token = calloc(1, 4096);
           token = strtok(command, " ");
           char *args[4096];
           args[0] = token;
           int i = 1;
           while((token = strtok(NULL, " ")) != NULL){
-            args[i] = token;
-            int argLen = strlen(args[i]);
-            if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
+            if((token[0] != '<')){
+              args[i] = token;
+              int argLen = strlen(args[i]);
+              if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
+            }
             i++;
           }
           execvp(args[0], args);
