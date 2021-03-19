@@ -29,7 +29,6 @@ int main()
         fgets(command, 4096, stdin);
         int len = strlen(command);
         if (command[len-1] == '\n') command[len-1] = '\0';
-        // printf("command:\t%s\n", command);
         if((strncmp(command, "exit", 4)) == 0){
           exit(0);
         }
@@ -48,12 +47,6 @@ int main()
           if((sourceFile = strstr(command, " < ")) != NULL){
             sourceFile = sourceFile+3; //this only works @end, change to strtok
             sourceFile = strtok(sourceFile, " ");
-            int charInd = 0;
-            // while((charInd != ' ') && (charInd != '\n') && (charInd != EOF) && (charInd != '\0')){
-            //   newInStream[charInd] = *(sourceFile+charInd);
-            //   charInd++;
-            // }
-            // sourceFile[charInd] = '\0';
             close(0);
             int fd = open(sourceFile, O_RDONLY);
             if(fd == -1){
