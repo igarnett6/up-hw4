@@ -43,14 +43,24 @@ int main()
           continue;
         }
         if(fork() == 0){
-          char *sourceFile;
-          if((sourceFile = strstr(command, " < ")) != NULL){
-            sourceFile = sourceFile+3; //this only works @end, change to strtok
-            sourceFile = strtok(sourceFile, " ");
+          char *redirFile;
+          if((redirFile = strstr(command, " < ")) != NULL){
+            redirFile = redirFile+3;
+            redirFile = strtok(redirFile, " ");
             close(0);
-            int fd = open(sourceFile, O_RDONLY);
+            int fd = open(redirFile, O_RDONLY);
             if(fd == -1){
-              perror("Failed to open \"sourceFile\"");
+              perror("Failed to open \"redirFile\"");
+              exit(1);
+            }
+          }
+          if((redirFile = strstr(command, " > ")) != NULL){
+            redirFile = redirFile+3;
+            redirFile = strtok(redirFile, " ");
+            close(1);
+            int fd = open(redirFile, O_RDWR | O_CREAT);
+            if(fd == -1){
+              perror("Failed to open \"redirFile\"");
               exit(1);
             }
           }
@@ -60,7 +70,7 @@ int main()
           args[0] = token;
           int i = 1;
           while((token = strtok(NULL, " ")) != NULL){
-            if((token[0] != '<')){
+            if((token[0] != '<') && (token[0] != '>')){
               args[i] = token;
               int argLen = strlen(args[i]);
               if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
