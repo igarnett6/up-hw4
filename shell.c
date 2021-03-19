@@ -47,6 +47,13 @@ int main()
           char *sourceFile;
           if((sourceFile = strstr(command, " < ")) != NULL){
             sourceFile = sourceFile+3; //this only works @end, change to strtok
+            sourceFile = strtok(sourceFile, " ");
+            int charInd = 0;
+            // while((charInd != ' ') && (charInd != '\n') && (charInd != EOF) && (charInd != '\0')){
+            //   newInStream[charInd] = *(sourceFile+charInd);
+            //   charInd++;
+            // }
+            // sourceFile[charInd] = '\0';
             close(0);
             int fd = open(sourceFile, O_RDONLY);
             if(fd == -1){
