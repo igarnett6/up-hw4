@@ -64,13 +64,23 @@ int main()
               exit(1);
             }
           }
+          if((redirFile = strstr(command, " 2> ")) != NULL){
+            redirFile = redirFile+3;
+            redirFile = strtok(redirFile, " ");
+            close(2);
+            int fd = open(redirFile, O_RDWR | O_CREAT);
+            if(fd == -1){
+              perror("Failed to open \"redirFile\"");
+              exit(1);
+            }
+          }
           char *token = calloc(1, 4096);
           token = strtok(command, " ");
           char *args[4096];
           args[0] = token;
           int i = 1;
           while((token = strtok(NULL, " ")) != NULL){
-            if((token[0] != '<') && (token[0] != '>')){
+            if((token[0] != '<') && (token[0] != '>') && !(token[0] == '2' && token[1] == '>')){
               args[i] = token;
               int argLen = strlen(args[i]);
               if (args[i][argLen-1] == '\n') args[i][argLen-1] = '\0';
